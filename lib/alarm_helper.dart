@@ -64,7 +64,6 @@ class AlarmHelper {
       var alarmInfo = AlarmInfo.fromMap(element);
       _alarms.add(alarmInfo);
     });
-
     return _alarms;
   }
 
@@ -75,7 +74,6 @@ class AlarmHelper {
 
   Future<int> update(int id, AlarmInfo alarmInfo) async {
     var db = await this.database;
-    // print("CCCCCCCCCCCCCCCCCCCCCC:${alarmInfo.status}");
     return await db.update(tableAlarm, alarmInfo.toMap(),
         where: '$columnId = ?', whereArgs: [id]);
   }

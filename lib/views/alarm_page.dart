@@ -9,6 +9,7 @@ import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import '../main.dart';
 
 class AlarmPage extends StatefulWidget {
+  AlarmPage({Key? key}) : super(key: key);
   @override
   _AlarmPageState createState() => _AlarmPageState();
 }
@@ -46,27 +47,24 @@ class _AlarmPageState extends State<AlarmPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(
-            'Alarm',
-            style: TextStyle(
-                fontFamily: 'avenir',
-                fontWeight: FontWeight.w700,
-                color: CustomColors.primaryTextColor,
-                fontSize: 24),
-          ),
+          widgetTextTitle("Repeat notifications"),
           Expanded(
             child: FutureBuilder<List<AlarmInfo>>(
               future: _alarms,
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   _currentAlarms = snapshot.data;
-
                   return ListView(
+                    // return ReorderableListView(
                     children: snapshot.data!.map<Widget>((alarm) {
+                      // children:
+                      //     List<Widget>.generate(snapshot.data!.length, (index) {
+                      //   var alarm = snapshot.data![index];
                       var alarmTime = durationToString(alarm.minutesRepeat);
                       var gradientColor = GradientTemplate
                           .gradientTemplate[alarm.gradientColorIndex].colors;
                       return Container(
+                        // key: Key('$index'),
                         margin: const EdgeInsets.only(bottom: 32),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 8),
@@ -100,12 +98,15 @@ class _AlarmPageState extends State<AlarmPage> {
                                       size: 24,
                                     ),
                                     SizedBox(width: 8),
-                                    Text(
-                                      alarm.title,
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontFamily: 'avenir'),
-                                    ),
+                                    widgetTextButton(alarm.title, alarm.id!,
+                                        isTitle: true),
+                                    // Text(
+                                    //   alarm.title,
+                                    //   style: TextStyle(
+                                    //       color: Colors.white,
+                                    //       fontFamily: 'avenir',
+                                    //       fontSize: 20),
+                                    // ),
                                   ],
                                 ),
                                 Switch(
@@ -121,21 +122,14 @@ class _AlarmPageState extends State<AlarmPage> {
                               ],
                             ),
                             Text(
-                              'Duration repeat (HH:mm)',
+                              'Repeat after (HH:mm)',
                               style: TextStyle(
                                   color: Colors.white, fontFamily: 'avenir'),
                             ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: <Widget>[
-                                Text(
-                                  alarmTime,
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontFamily: 'avenir',
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w700),
-                                ),
+                                widgetTextButton(alarmTime, alarm.id!),
                                 IconButton(
                                     icon: Icon(Icons.delete),
                                     color: Colors.white,
@@ -148,136 +142,98 @@ class _AlarmPageState extends State<AlarmPage> {
                         ),
                       );
                     }).followedBy([
-                      if (_currentAlarms!.length < 5)
-                        DottedBorder(
-                          strokeWidth: 2,
-                          color: CustomColors.clockOutline,
-                          borderType: BorderType.RRect,
-                          radius: Radius.circular(24),
-                          dashPattern: [5, 4],
-                          child: Container(
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              color: CustomColors.clockBG,
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(24)),
-                            ),
-                            child: FlatButton(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 32, vertical: 16),
-                              onPressed: () {
-                                showModalBottomSheet(
-                                  useRootNavigator: true,
-                                  context: context,
-                                  clipBehavior: Clip.antiAlias,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(24),
-                                    ),
+                      // }).toList(),
+                      DottedBorder(
+                        strokeWidth: 2,
+                        color: CustomColors.clockOutline,
+                        borderType: BorderType.RRect,
+                        radius: Radius.circular(24),
+                        dashPattern: [5, 4],
+                        child: Container(
+                          // key: Key("-1"),
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: CustomColors.clockBG,
+                            borderRadius: BorderRadius.all(Radius.circular(24)),
+                          ),
+                          child: FlatButton(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 32, vertical: 16),
+                            onPressed: () {
+                              showModalBottomSheet(
+                                useRootNavigator: true,
+                                context: context,
+                                clipBehavior: Clip.antiAlias,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(24),
                                   ),
-                                  builder: (context) {
-                                    return StatefulBuilder(
-                                      builder: (context, setModalState) {
-                                        return Container(
-                                          padding: const EdgeInsets.all(32),
-                                          child: Column(
-                                            children: [
-                                              Text(
-                                                "Duration",
-                                                style: TextStyle(
-                                                    color: Colors.black,
-                                                    fontFamily: 'avenir',
-                                                    fontSize: 24,
-                                                    fontWeight:
-                                                        FontWeight.w700),
+                                ),
+                                builder: (context) {
+                                  return StatefulBuilder(
+                                    builder: (context, setModalState) {
+                                      return Container(
+                                        padding: const EdgeInsets.all(32),
+                                        child: Column(
+                                          children: [
+                                            widgetTextTitle("Duration",
+                                                isWhite: false),
+                                            SizedBox(height: 10),
+                                            TextField(
+                                              onChanged: (text) {
+                                                titleRepeat = text;
+                                              },
+                                              decoration: InputDecoration(
+                                                border: OutlineInputBorder(),
+                                                hintText: 'Title',
                                               ),
-                                              SizedBox(height: 10),
-                                              TextField(
-                                                onChanged: (text) {
-                                                  titleRepeat = text;
-                                                },
-                                                decoration: InputDecoration(
-                                                  border: OutlineInputBorder(),
-                                                  hintText: 'Title',
-                                                ),
-                                              ),
-                                              SizedBox(height: 10),
-                                              Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: TextField(
-                                                      controller:
-                                                          controllerHour,
-                                                      decoration:
-                                                          InputDecoration(
-                                                        border:
-                                                            OutlineInputBorder(),
-                                                        hintText: 'HH',
-                                                      ),
-                                                      keyboardType:
-                                                          TextInputType.number,
-                                                    ),
-                                                  ),
-                                                  SizedBox(
-                                                    width: 10,
-                                                  ),
-                                                  Expanded(
-                                                    child: TextField(
-                                                      controller:
-                                                          controllerMinute,
-                                                      decoration:
-                                                          InputDecoration(
-                                                        border:
-                                                            OutlineInputBorder(),
-                                                        hintText: 'mm',
-                                                      ),
-                                                      keyboardType:
-                                                          TextInputType.number,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              SizedBox(height: 10),
-                                              FloatingActionButton.extended(
-                                                onPressed: () {
-                                                  onSaveAlarm();
-                                                },
-                                                icon: Icon(Icons.alarm),
-                                                label: Text('Save'),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  },
-                                );
-                              },
-                              child: Column(
-                                children: <Widget>[
-                                  Image.asset(
-                                    'assets/add_alarm.png',
-                                    scale: 1.5,
-                                  ),
-                                  SizedBox(height: 8),
-                                  Text(
-                                    'Add Alarm',
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontFamily: 'avenir'),
-                                  ),
-                                ],
-                              ),
+                                            ),
+                                            SizedBox(height: 10),
+                                            widgetTimeDuration(),
+                                            SizedBox(height: 10),
+                                            FloatingActionButton.extended(
+                                              onPressed: () {
+                                                onSaveAlarm();
+                                              },
+                                              icon: Icon(Icons.alarm),
+                                              label: Text('Save'),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              );
+                            },
+                            child: Column(
+                              children: <Widget>[
+                                Image.asset(
+                                  'assets/add_alarm.png',
+                                  scale: 1.5,
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Add Repeat',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontFamily: 'avenir'),
+                                ),
+                              ],
                             ),
                           ),
-                        )
-                      else
-                        Center(
-                            child: Text(
-                          'Only 5 alarms allowed!',
-                          style: TextStyle(color: Colors.white),
-                        )),
+                        ),
+                      )
                     ]).toList(),
+                    // onReorder: (int oldIndex, int newIndex) {
+                    //   setState(() {
+                    //     if (newIndex > oldIndex) {
+                    //       newIndex -= 1;
+                    //     }
+                    //     final item = snapshot.data!.removeAt(oldIndex);
+                    //     snapshot.data!.insert(newIndex, item);
+                    //   });
+                    // },
                   );
                 }
                 return Center(
@@ -294,7 +250,10 @@ class _AlarmPageState extends State<AlarmPage> {
     );
   }
 
-  Future<void> onSaveAlarm() async {
+  Future<void> onSaveAlarm(
+      {bool isRepeat = true,
+      int idForUpdate = -1,
+      String titleForUpdate = "Noti"}) async {
     int hour, minute;
     var hText = controllerHour.text;
     var mText = controllerMinute.text;
@@ -311,25 +270,33 @@ class _AlarmPageState extends State<AlarmPage> {
       hour = 0;
       minute = 0;
     }
-
     minutesRepeat = hour + minute;
 
-    var alarmInfo = AlarmInfo(
-      title: (titleRepeat != '') ? titleRepeat : "Noti",
-      minutesRepeat: minutesRepeat,
-      status: 1,
-      gradientColorIndex: _currentAlarms!.length,
-    );
-    int id = await _alarmHelper.insertAlarm(alarmInfo);
-
-    await AndroidAlarmManager.periodic(
-      Duration(minutes: (minutesRepeat != 0) ? minutesRepeat : 1),
-      id,
-      showNotification,
-      exact: true,
-      wakeup: true,
-    ).then((value) => print(
-        "StartRepeat: ${value.toString()};time: ${alarmInfo.minutesRepeat.toString()}"));
+    if (isRepeat) {
+      var alarmInfo = AlarmInfo(
+        title: (titleRepeat != '') ? titleRepeat : "Noti",
+        minutesRepeat: minutesRepeat,
+        status: 1,
+        gradientColorIndex: _currentAlarms!.length % 5,
+      );
+      int id = await _alarmHelper.insertAlarm(alarmInfo);
+      await AndroidAlarmManager.periodic(
+        Duration(minutes: (minutesRepeat != 0) ? minutesRepeat : 1),
+        id,
+        showNotification,
+        exact: true,
+        wakeup: true,
+      ).then((value) => print(
+          "StartRepeat: ${value.toString()};time: ${alarmInfo.minutesRepeat.toString()}"));
+    } else {
+      var alarmInfo = await _alarmHelper.getOneAlarm(idForUpdate);
+      if (titleRepeat == "Noti") {
+        alarmInfo.minutesRepeat = minutesRepeat;
+      } else {
+        alarmInfo.title = titleForUpdate;
+      }
+      _alarmHelper.update(idForUpdate, alarmInfo);
+    }
     Navigator.pop(context);
     loadAlarms();
   }
@@ -359,6 +326,104 @@ class _AlarmPageState extends State<AlarmPage> {
       ).then((value) => print(
           "StartRepeat: ${value.toString()};time: ${alarmInfo.minutesRepeat.toString()}"));
     }
+  }
+
+  Widget widgetTimeDuration() {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: controllerHour,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'HH',
+            ),
+            keyboardType: TextInputType.number,
+          ),
+        ),
+        SizedBox(
+          width: 10,
+        ),
+        Expanded(
+          child: TextField(
+            controller: controllerMinute,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'mm',
+            ),
+            keyboardType: TextInputType.number,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget widgetTextTitle(String title,
+      {bool isWhite = true, double fontSize = 24}) {
+    return Text(
+      title,
+      style: TextStyle(
+          color: (isWhite) ? Colors.white : Colors.black,
+          fontFamily: 'avenir',
+          fontSize: fontSize,
+          fontWeight: FontWeight.w700),
+    );
+  }
+
+  Widget widgetTextButton(String title, int idForUpdate,
+      {bool isTitle = false}) {
+    return TextButton(
+      onPressed: () async {
+        await showDialog(
+          context: context,
+          builder: (BuildContext buildContext) {
+            return Dialog(
+              child: Container(
+                height: 190,
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    widgetTextTitle(
+                        (isTitle) ? "Change Title" : "Change Duration",
+                        isWhite: false),
+                    SizedBox(height: 10),
+                    (isTitle)
+                        ? TextField(
+                            onChanged: (text) {
+                              titleRepeat = text;
+                            },
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(),
+                              hintText: 'Title',
+                            ),
+                            autofocus: true,
+                          )
+                        : widgetTimeDuration(),
+                    SizedBox(height: 10),
+                    FloatingActionButton.extended(
+                      onPressed: () {
+                        if (isTitle) {
+                          onSaveAlarm(
+                              isRepeat: false,
+                              idForUpdate: idForUpdate,
+                              titleForUpdate: titleRepeat);
+                        } else {
+                          onSaveAlarm(
+                              isRepeat: false, idForUpdate: idForUpdate);
+                        }
+                      },
+                      icon: Icon(Icons.alarm),
+                      label: Text('Save'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+      child: widgetTextTitle(title),
+    );
   }
 }
 
