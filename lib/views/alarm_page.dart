@@ -5,6 +5,7 @@ import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 import '../main.dart';
 
@@ -15,246 +16,259 @@ class AlarmPage extends StatefulWidget {
 }
 
 class _AlarmPageState extends State<AlarmPage> {
+  DateTime? currentBackPressTime;
   AlarmHelper _alarmHelper = AlarmHelper();
   Future<List<AlarmInfo>>? _alarms;
   List<AlarmInfo>? _currentAlarms;
-  late int minutesRepeat;
-  late String titleRepeat;
+  int minutesRepeat = 0;
+  int generateId = -1;
+  final controllerTitle = TextEditingController();
   final controllerHour = TextEditingController();
   final controllerMinute = TextEditingController();
 
   @override
   void initState() {
-    _alarmHelper.initializeDatabase().then((value) {
+    _alarmHelper.initializeDatabase().then((value) async {
       print('------database intialized');
-      loadAlarms();
+      var temp = await _alarmHelper.getAlarms();
+      _alarms = temp.item1;
+      generateId = temp.item2;
+      if (mounted) setState(() {});
     });
 
     super.initState();
   }
 
-  void loadAlarms() {
-    minutesRepeat = 0;
-    titleRepeat = "Noti";
-    _alarms = _alarmHelper.getAlarms();
-    if (mounted) setState(() {});
-  }
+  // void loadAlarms() {
+  //   minutesRepeat = 0;
+  //   _alarms = _alarmHelper.getAlarms();
+  //   if (mounted) setState(() {});
+  // }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 32, vertical: 64),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          widgetTextTitle("Repeat notifications"),
-          Expanded(
-            child: FutureBuilder<List<AlarmInfo>>(
-              future: _alarms,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  _currentAlarms = snapshot.data;
-                  return ListView(
-                    // return ReorderableListView(
-                    children: snapshot.data!.map<Widget>((alarm) {
-                      // children:
-                      //     List<Widget>.generate(snapshot.data!.length, (index) {
-                      //   var alarm = snapshot.data![index];
-                      var alarmTime = durationToString(alarm.minutesRepeat);
-                      var gradientColor = GradientTemplate
-                          .gradientTemplate[alarm.gradientColorIndex].colors;
-                      return Container(
-                        // key: Key('$index'),
-                        margin: const EdgeInsets.only(bottom: 32),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: gradientColor,
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
+    return WillPopScope(
+        child: Container(
+          padding: EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              widgetTextTitle("Repeat notifications"),
+              SizedBox(
+                height: 10,
+              ),
+              Expanded(
+                child: FutureBuilder<List<AlarmInfo>>(
+                  future: _alarms,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      _currentAlarms = snapshot.data;
+                      return Theme(
+                          data: Theme.of(context).copyWith(
+                            canvasColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: gradientColor.last.withOpacity(0.4),
-                              blurRadius: 8,
-                              spreadRadius: 2,
-                              offset: Offset(4, 4),
-                            ),
-                          ],
-                          borderRadius: BorderRadius.all(Radius.circular(24)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                Row(
-                                  children: <Widget>[
-                                    Icon(
-                                      Icons.label,
-                                      color: Colors.white,
-                                      size: 24,
-                                    ),
-                                    SizedBox(width: 8),
-                                    widgetTextButton(alarm.title, alarm.id!,
-                                        isTitle: true),
-                                    // Text(
-                                    //   alarm.title,
-                                    //   style: TextStyle(
-                                    //       color: Colors.white,
-                                    //       fontFamily: 'avenir',
-                                    //       fontSize: 20),
-                                    // ),
-                                  ],
-                                ),
-                                Switch(
-                                  onChanged: (bool value) {
-                                    setState(() {
-                                      alarm.status = (value) ? 1 : 0;
-                                      updateAlarm(alarm.id!, alarm);
-                                    });
-                                  },
-                                  value: (alarm.status == 1) ? true : false,
-                                  activeColor: Colors.white,
-                                ),
-                              ],
-                            ),
-                            Text(
-                              'Repeat after (HH:mm)',
-                              style: TextStyle(
-                                  color: Colors.white, fontFamily: 'avenir'),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: <Widget>[
-                                widgetTextButton(alarmTime, alarm.id!),
-                                IconButton(
-                                    icon: Icon(Icons.delete),
-                                    color: Colors.white,
-                                    onPressed: () {
-                                      deleteAlarm(alarm.id!);
-                                    }),
-                              ],
-                            ),
-                          ],
-                        ),
-                      );
-                    }).followedBy([
-                      // }).toList(),
-                      DottedBorder(
-                        strokeWidth: 2,
-                        color: CustomColors.clockOutline,
-                        borderType: BorderType.RRect,
-                        radius: Radius.circular(24),
-                        dashPattern: [5, 4],
-                        child: Container(
-                          // key: Key("-1"),
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: CustomColors.clockBG,
-                            borderRadius: BorderRadius.all(Radius.circular(24)),
-                          ),
-                          child: FlatButton(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 32, vertical: 16),
-                            onPressed: () {
-                              showModalBottomSheet(
-                                useRootNavigator: true,
-                                context: context,
-                                clipBehavior: Clip.antiAlias,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.vertical(
-                                    top: Radius.circular(24),
+                          child: ReorderableListView(
+                            children: _currentAlarms!.map<Widget>((alarm) {
+                              var alarmTime =
+                                  durationToString(alarm.minutesRepeat);
+                              var gradientColor = GradientTemplate
+                                  .gradientTemplate[alarm.gradientColorIndex]
+                                  .colors;
+                              return Container(
+                                key: Key('${alarm.id}'),
+                                margin: const EdgeInsets.only(bottom: 32),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 8),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: gradientColor,
+                                    begin: Alignment.centerLeft,
+                                    end: Alignment.centerRight,
                                   ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color:
+                                          gradientColor.last.withOpacity(0.4),
+                                      blurRadius: 8,
+                                      spreadRadius: 2,
+                                      offset: Offset(4, 4),
+                                    ),
+                                  ],
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(24)),
                                 ),
-                                builder: (context) {
-                                  return StatefulBuilder(
-                                    builder: (context, setModalState) {
-                                      return Container(
-                                        padding: const EdgeInsets.all(32),
-                                        child: Column(
-                                          children: [
-                                            widgetTextTitle("Duration",
-                                                isWhite: false),
-                                            SizedBox(height: 10),
-                                            TextField(
-                                              onChanged: (text) {
-                                                titleRepeat = text;
-                                              },
-                                              decoration: InputDecoration(
-                                                border: OutlineInputBorder(),
-                                                hintText: 'Title',
-                                              ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: <Widget>[
+                                        Row(
+                                          children: <Widget>[
+                                            Icon(
+                                              Icons.label,
+                                              color: Colors.white,
+                                              size: 24,
                                             ),
-                                            SizedBox(height: 10),
-                                            widgetTimeDuration(),
-                                            SizedBox(height: 10),
-                                            FloatingActionButton.extended(
-                                              onPressed: () {
-                                                onSaveAlarm();
-                                              },
-                                              icon: Icon(Icons.alarm),
-                                              label: Text('Save'),
-                                            ),
+                                            SizedBox(width: 10),
+                                            widgetTextButton(
+                                                alarm.title, alarm.id,
+                                                isTitle: true),
                                           ],
                                         ),
-                                      );
-                                    },
-                                  );
-                                },
+                                        Switch(
+                                          onChanged: (bool value) {
+                                            setState(() {
+                                              alarm.status = (value) ? 1 : 0;
+                                              updateAlarm(alarm.id, alarm);
+                                            });
+                                          },
+                                          value: (alarm.status == 1)
+                                              ? true
+                                              : false,
+                                          activeColor: Colors.white,
+                                        ),
+                                      ],
+                                    ),
+                                    Text(
+                                      'Repeat after (HH:mm)',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontFamily: 'avenir'),
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: <Widget>[
+                                        widgetTextButton(alarmTime, alarm.id),
+                                        IconButton(
+                                            icon: Icon(Icons.delete),
+                                            color: Colors.white,
+                                            onPressed: () {
+                                              deleteAlarm(alarm.id);
+                                            }),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               );
-                            },
-                            child: Column(
-                              children: <Widget>[
-                                Image.asset(
-                                  'assets/add_alarm.png',
-                                  scale: 1.5,
+                            }).followedBy([
+                              Container(
+                                key: Key("9999"),
+                                child: DottedBorder(
+                                  strokeWidth: 2,
+                                  color: CustomColors.clockOutline,
+                                  borderType: BorderType.RRect,
+                                  radius: Radius.circular(24),
+                                  dashPattern: [5, 4],
+                                  child: Container(
+                                    width: double.infinity,
+                                    decoration: BoxDecoration(
+                                      color: CustomColors.clockBG,
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(24)),
+                                    ),
+                                    child: FlatButton(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 32, vertical: 16),
+                                      onPressed: () {
+                                        showModalBottomSheet(
+                                          useRootNavigator: true,
+                                          context: context,
+                                          clipBehavior: Clip.antiAlias,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.vertical(
+                                              top: Radius.circular(24),
+                                            ),
+                                          ),
+                                          builder: (context) {
+                                            return StatefulBuilder(
+                                              builder:
+                                                  (context, setModalState) {
+                                                return Container(
+                                                  padding:
+                                                      const EdgeInsets.all(32),
+                                                  child: Column(
+                                                    children: [
+                                                      widgetTextTitle(
+                                                          "Duration",
+                                                          isWhite: false),
+                                                      SizedBox(height: 10),
+                                                      TextField(
+                                                        controller:
+                                                            controllerTitle,
+                                                        decoration:
+                                                            InputDecoration(
+                                                          border:
+                                                              OutlineInputBorder(),
+                                                          hintText: 'Title',
+                                                        ),
+                                                      ),
+                                                      SizedBox(height: 10),
+                                                      widgetTimeDuration(),
+                                                      SizedBox(height: 10),
+                                                      FloatingActionButton
+                                                          .extended(
+                                                        onPressed: () {
+                                                          onSaveAlarm();
+                                                        },
+                                                        icon: Icon(Icons.alarm),
+                                                        label: Text('Save'),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
+                                            );
+                                          },
+                                        );
+                                      },
+                                      child: Column(
+                                        children: <Widget>[
+                                          Image.asset(
+                                            'assets/add_alarm.png',
+                                            scale: 1.5,
+                                          ),
+                                          SizedBox(height: 8),
+                                          Text(
+                                            'Add Repeat',
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontFamily: 'avenir'),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                 ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'Add Repeat',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontFamily: 'avenir'),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      )
-                    ]).toList(),
-                    // onReorder: (int oldIndex, int newIndex) {
-                    //   setState(() {
-                    //     if (newIndex > oldIndex) {
-                    //       newIndex -= 1;
-                    //     }
-                    //     final item = snapshot.data!.removeAt(oldIndex);
-                    //     snapshot.data!.insert(newIndex, item);
-                    //   });
-                    // },
-                  );
-                }
-                return Center(
-                  child: Text(
-                    'Loading..',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                );
-              },
-            ),
+                              )
+                            ]).toList(),
+                            onReorder: _onReorder,
+                          ));
+                    }
+                    return Center(
+                      child: Text(
+                        'Loading..',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        ),
+        onWillPop: onWillPop);
   }
 
   Future<void> onSaveAlarm(
       {bool isRepeat = true,
       int idForUpdate = -1,
-      String titleForUpdate = "Noti"}) async {
+      bool isForTitle = false}) async {
     int hour, minute;
+    var title = controllerTitle.text;
     var hText = controllerHour.text;
     var mText = controllerMinute.text;
     if (hText != '' && mText != '') {
@@ -273,13 +287,17 @@ class _AlarmPageState extends State<AlarmPage> {
     minutesRepeat = hour + minute;
 
     if (isRepeat) {
+      generateId += 1;
       var alarmInfo = AlarmInfo(
-        title: (titleRepeat != '') ? titleRepeat : "Noti",
+        id: generateId,
+        idx: generateId,
+        title: (title != '') ? title : "Noti",
         minutesRepeat: minutesRepeat,
         status: 1,
         gradientColorIndex: _currentAlarms!.length % 5,
       );
       int id = await _alarmHelper.insertAlarm(alarmInfo);
+      _currentAlarms!.add(alarmInfo);
       await AndroidAlarmManager.periodic(
         Duration(minutes: (minutesRepeat != 0) ? minutesRepeat : 1),
         id,
@@ -289,28 +307,51 @@ class _AlarmPageState extends State<AlarmPage> {
       ).then((value) => print(
           "StartRepeat: ${value.toString()};time: ${alarmInfo.minutesRepeat.toString()}"));
     } else {
-      var alarmInfo = await _alarmHelper.getOneAlarm(idForUpdate);
-      if (titleRepeat == "Noti") {
+      if (isForTitle && title.isNotEmpty) {
+        var alarmInfo = await _alarmHelper.getOneAlarm(idForUpdate);
+        var idx =
+            _currentAlarms!.indexWhere((element) => element.id == idForUpdate);
+        _currentAlarms![idx].title = title;
+        alarmInfo.title = title;
+        _alarmHelper.update(idForUpdate, alarmInfo);
+      } else if (isForTitle == false &&
+          (hText.isNotEmpty || mText.isNotEmpty)) {
+        var alarmInfo = await _alarmHelper.getOneAlarm(idForUpdate);
+        var idx =
+            _currentAlarms!.indexWhere((element) => element.id == idForUpdate);
+        _currentAlarms![idx].minutesRepeat = minutesRepeat;
         alarmInfo.minutesRepeat = minutesRepeat;
-      } else {
-        alarmInfo.title = titleForUpdate;
+        _alarmHelper.update(idForUpdate, alarmInfo);
       }
-      _alarmHelper.update(idForUpdate, alarmInfo);
     }
+    // print("=" * 50);
+    // _currentAlarms!.forEach((element) {
+    //   print(element.toMap());
+    // });
+    // print("=" * 50);
     Navigator.pop(context);
-    loadAlarms();
+    setState(() {
+      _alarms = Future.value(_currentAlarms);
+    });
   }
 
   Future<void> deleteAlarm(int id) async {
+    _currentAlarms!.removeWhere((element) => element.id == id);
+    setState(() {
+      _alarms = Future.value(_currentAlarms);
+    });
     _alarmHelper.delete(id);
-    loadAlarms();
     await AndroidAlarmManager.cancel(id)
         .then((value) => print("CancelRepeat: ${value.toString()}"));
   }
 
   Future<void> updateAlarm(int id, AlarmInfo alarmInfo) async {
+    var idx = _currentAlarms!.indexWhere((element) => element.id == id);
+    _currentAlarms![idx] = alarmInfo;
+    setState(() {
+      _alarms = Future.value(_currentAlarms);
+    });
     _alarmHelper.update(id, alarmInfo);
-    loadAlarms();
     if (alarmInfo.status == 0) {
       await AndroidAlarmManager.cancel(id)
           .then((value) => print("CancelRepeat: ${value.toString()}"));
@@ -389,9 +430,7 @@ class _AlarmPageState extends State<AlarmPage> {
                     SizedBox(height: 10),
                     (isTitle)
                         ? TextField(
-                            onChanged: (text) {
-                              titleRepeat = text;
-                            },
+                            controller: controllerTitle,
                             decoration: InputDecoration(
                               border: OutlineInputBorder(),
                               hintText: 'Title',
@@ -404,9 +443,10 @@ class _AlarmPageState extends State<AlarmPage> {
                       onPressed: () {
                         if (isTitle) {
                           onSaveAlarm(
-                              isRepeat: false,
-                              idForUpdate: idForUpdate,
-                              titleForUpdate: titleRepeat);
+                            isRepeat: false,
+                            idForUpdate: idForUpdate,
+                            isForTitle: true,
+                          );
                         } else {
                           onSaveAlarm(
                               isRepeat: false, idForUpdate: idForUpdate);
@@ -425,6 +465,34 @@ class _AlarmPageState extends State<AlarmPage> {
       child: widgetTextTitle(title),
     );
   }
+
+  void _onReorder(int oldIndex, int newIndex) async {
+    var lenCurrentAlarm = _currentAlarms!.length;
+    if (oldIndex < lenCurrentAlarm) {
+      if (newIndex > lenCurrentAlarm) newIndex = lenCurrentAlarm;
+      if (oldIndex < newIndex) newIndex -= 1;
+
+      setState(() {
+        final AlarmInfo item = _currentAlarms![oldIndex];
+        _currentAlarms!.removeAt(oldIndex);
+        _currentAlarms!.insert(newIndex, item);
+        _alarms = Future.value(_currentAlarms);
+      });
+      _alarmHelper.onReorder(_currentAlarms!);
+    }
+  }
+
+  Future<bool> onWillPop() {
+    DateTime now = DateTime.now();
+    if (currentBackPressTime == null ||
+        now.difference(currentBackPressTime!) > Duration(seconds: 2)) {
+      currentBackPressTime = now;
+      Fluttertoast.showToast(msg: "Click Back again to exit");
+      // _alarmHelper.onReorder(_currentAlarms!);
+      return Future.value(false);
+    }
+    return Future.value(true);
+  }
 }
 
 void showNotification(int id) async {
@@ -432,9 +500,9 @@ void showNotification(int id) async {
   var alarmInfo = await _alarmHelper.getOneAlarm(id);
   if (alarmInfo.status == 1) {
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'CHANNEL_ID',
-      'CHANNEL_NAME',
-      'CHANNEL_DESCRIPTION',
+      'quyvsquy',
+      'RepeatApp',
+      'Repeat the notification after a period of time',
       importance: Importance.max,
       priority: Priority.high,
       icon: 'chicken_icon',
