@@ -25,6 +25,11 @@ class _AlarmPageState extends State<AlarmPage> {
   final controllerTitle = TextEditingController();
   final controllerHour = TextEditingController();
   final controllerMinute = TextEditingController();
+  double heightSizeBoxOut = 0;
+  double widthSizeBoxOut = 0;
+  double fontSizeOut = 0;
+  double heightWidgetTextButton = 0;
+  double widthWidgetTextButton = 0;
 
   @override
   void initState() {
@@ -47,15 +52,32 @@ class _AlarmPageState extends State<AlarmPage> {
 
   @override
   Widget build(BuildContext context) {
+    double widthSceen = MediaQuery.of(context).size.width; //411.42857142857144
+    double widthSizeBox = widthSceen / 41.142857142857144; //10
+
+    double heightSceen = MediaQuery.of(context).size.height; //830.8571428571429
+    double heightSizeBox = heightSceen / 83.08571428571429; //10
+
+    double paddingContainer = widthSceen / 12.85714286; //32
+    double borderRadiusSize = widthSceen / 17.14285714; //24
+
+    widthSizeBoxOut = widthSizeBox;
+    heightSizeBoxOut = heightSizeBox;
+    fontSizeOut = borderRadiusSize;
+    heightWidgetTextButton = heightSceen / 4.372932331;
+    widthWidgetTextButton = widthSceen / 2.057142857;
+
     return WillPopScope(
         child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+          padding: EdgeInsets.symmetric(
+              horizontal: paddingContainer, vertical: paddingContainer),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              widgetTextTitle("Repeat notifications"),
+              widgetTextTitle("Repeat notifications",
+                  fontSize: borderRadiusSize + 1),
               SizedBox(
-                height: 10,
+                height: heightSizeBox,
               ),
               Expanded(
                 child: FutureBuilder<List<AlarmInfo>>(
@@ -77,9 +99,11 @@ class _AlarmPageState extends State<AlarmPage> {
                                   .colors;
                               return Container(
                                 key: Key('${alarm.id}'),
-                                margin: const EdgeInsets.only(bottom: 32),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 8),
+                                margin:
+                                    EdgeInsets.only(bottom: paddingContainer),
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: paddingContainer / 2,
+                                    vertical: paddingContainer / 4),
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: gradientColor,
@@ -90,13 +114,14 @@ class _AlarmPageState extends State<AlarmPage> {
                                     BoxShadow(
                                       color:
                                           gradientColor.last.withOpacity(0.4),
-                                      blurRadius: 8,
-                                      spreadRadius: 2,
-                                      offset: Offset(4, 4),
+                                      blurRadius: paddingContainer / 4,
+                                      spreadRadius: paddingContainer / 16,
+                                      offset: Offset(paddingContainer / 8,
+                                          paddingContainer / 8),
                                     ),
                                   ],
-                                  borderRadius:
-                                      BorderRadius.all(Radius.circular(24)),
+                                  borderRadius: BorderRadius.all(
+                                      Radius.circular(borderRadiusSize)),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -110,9 +135,9 @@ class _AlarmPageState extends State<AlarmPage> {
                                             Icon(
                                               Icons.label,
                                               color: Colors.white,
-                                              size: 24,
+                                              size: borderRadiusSize,
                                             ),
-                                            SizedBox(width: 10),
+                                            SizedBox(width: widthSizeBox),
                                             widgetTextButton(
                                                 alarm.title, alarm.id,
                                                 isTitle: true),
@@ -133,7 +158,7 @@ class _AlarmPageState extends State<AlarmPage> {
                                       ],
                                     ),
                                     Text(
-                                      'Repeat after (HH:mm)',
+                                      'Repeat after (Hours:Minutes)',
                                       style: TextStyle(
                                           color: Colors.white,
                                           fontFamily: 'avenir'),
@@ -158,21 +183,25 @@ class _AlarmPageState extends State<AlarmPage> {
                               Container(
                                 key: Key("9999"),
                                 child: DottedBorder(
-                                  strokeWidth: 2,
+                                  strokeWidth: borderRadiusSize / 12,
                                   color: CustomColors.clockOutline,
                                   borderType: BorderType.RRect,
-                                  radius: Radius.circular(24),
-                                  dashPattern: [5, 4],
+                                  radius: Radius.circular(borderRadiusSize),
+                                  dashPattern: [
+                                    (borderRadiusSize / 6) + 1,
+                                    borderRadiusSize / 6
+                                  ],
                                   child: Container(
                                     width: double.infinity,
                                     decoration: BoxDecoration(
                                       color: CustomColors.clockBG,
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(24)),
+                                      borderRadius: BorderRadius.all(
+                                          Radius.circular(borderRadiusSize)),
                                     ),
                                     child: FlatButton(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 32, vertical: 16),
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: paddingContainer,
+                                          vertical: paddingContainer / 2),
                                       onPressed: () {
                                         showModalBottomSheet(
                                           useRootNavigator: true,
@@ -180,7 +209,8 @@ class _AlarmPageState extends State<AlarmPage> {
                                           clipBehavior: Clip.antiAlias,
                                           shape: RoundedRectangleBorder(
                                             borderRadius: BorderRadius.vertical(
-                                              top: Radius.circular(24),
+                                              top: Radius.circular(
+                                                  borderRadiusSize),
                                             ),
                                           ),
                                           builder: (context) {
@@ -194,8 +224,12 @@ class _AlarmPageState extends State<AlarmPage> {
                                                     children: [
                                                       widgetTextTitle(
                                                           "Duration",
-                                                          isWhite: false),
-                                                      SizedBox(height: 10),
+                                                          isWhite: false,
+                                                          fontSize:
+                                                              borderRadiusSize),
+                                                      SizedBox(
+                                                          height:
+                                                              heightSizeBox),
                                                       TextField(
                                                         controller:
                                                             controllerTitle,
@@ -206,9 +240,13 @@ class _AlarmPageState extends State<AlarmPage> {
                                                           hintText: 'Title',
                                                         ),
                                                       ),
-                                                      SizedBox(height: 10),
+                                                      SizedBox(
+                                                          height:
+                                                              heightSizeBox),
                                                       widgetTimeDuration(),
-                                                      SizedBox(height: 10),
+                                                      SizedBox(
+                                                          height:
+                                                              heightSizeBox),
                                                       FloatingActionButton
                                                           .extended(
                                                         onPressed: () {
@@ -231,7 +269,7 @@ class _AlarmPageState extends State<AlarmPage> {
                                             'assets/add_alarm.png',
                                             scale: 1.5,
                                           ),
-                                          SizedBox(height: 8),
+                                          SizedBox(height: heightSizeBox),
                                           Text(
                                             'Add Repeat',
                                             style: TextStyle(
@@ -309,18 +347,14 @@ class _AlarmPageState extends State<AlarmPage> {
     } else {
       if (isForTitle && title.isNotEmpty) {
         var alarmInfo = await _alarmHelper.getOneAlarm(idForUpdate);
-        var idx =
-            _currentAlarms!.indexWhere((element) => element.id == idForUpdate);
-        _currentAlarms![idx].title = title;
         alarmInfo.title = title;
+        updateAlarm(idForUpdate, alarmInfo, isSetState: false);
         _alarmHelper.update(idForUpdate, alarmInfo);
       } else if (isForTitle == false &&
           (hText.isNotEmpty || mText.isNotEmpty)) {
         var alarmInfo = await _alarmHelper.getOneAlarm(idForUpdate);
-        var idx =
-            _currentAlarms!.indexWhere((element) => element.id == idForUpdate);
-        _currentAlarms![idx].minutesRepeat = minutesRepeat;
         alarmInfo.minutesRepeat = minutesRepeat;
+        updateAlarm(idForUpdate, alarmInfo, isSetState: false);
         _alarmHelper.update(idForUpdate, alarmInfo);
       }
     }
@@ -345,17 +379,19 @@ class _AlarmPageState extends State<AlarmPage> {
         .then((value) => print("CancelRepeat: ${value.toString()}"));
   }
 
-  Future<void> updateAlarm(int id, AlarmInfo alarmInfo) async {
+  Future<void> updateAlarm(int id, AlarmInfo alarmInfo,
+      {bool isSetState = true}) async {
     var idx = _currentAlarms!.indexWhere((element) => element.id == id);
     _currentAlarms![idx] = alarmInfo;
-    setState(() {
-      _alarms = Future.value(_currentAlarms);
-    });
+    if (isSetState) {
+      setState(() {
+        _alarms = Future.value(_currentAlarms);
+      });
+    }
     _alarmHelper.update(id, alarmInfo);
-    if (alarmInfo.status == 0) {
-      await AndroidAlarmManager.cancel(id)
-          .then((value) => print("CancelRepeat: ${value.toString()}"));
-    } else {
+    await AndroidAlarmManager.cancel(id)
+        .then((value) => print("CancelRepeat: ${value.toString()}"));
+    if (alarmInfo.status == 1) {
       await AndroidAlarmManager.periodic(
         Duration(
             minutes:
@@ -377,20 +413,20 @@ class _AlarmPageState extends State<AlarmPage> {
             controller: controllerHour,
             decoration: InputDecoration(
               border: OutlineInputBorder(),
-              hintText: 'HH',
+              hintText: 'Hours',
             ),
             keyboardType: TextInputType.number,
           ),
         ),
         SizedBox(
-          width: 10,
+          width: widthSizeBoxOut,
         ),
         Expanded(
           child: TextField(
             controller: controllerMinute,
             decoration: InputDecoration(
               border: OutlineInputBorder(),
-              hintText: 'mm',
+              hintText: 'Minutes',
             ),
             keyboardType: TextInputType.number,
           ),
@@ -420,14 +456,15 @@ class _AlarmPageState extends State<AlarmPage> {
           builder: (BuildContext buildContext) {
             return Dialog(
               child: Container(
-                height: 190,
+                height: heightWidgetTextButton,
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
                     widgetTextTitle(
                         (isTitle) ? "Change Title" : "Change Duration",
-                        isWhite: false),
-                    SizedBox(height: 10),
+                        isWhite: false,
+                        fontSize: fontSizeOut),
+                    SizedBox(height: heightSizeBoxOut),
                     (isTitle)
                         ? TextField(
                             controller: controllerTitle,
@@ -438,7 +475,7 @@ class _AlarmPageState extends State<AlarmPage> {
                             autofocus: true,
                           )
                         : widgetTimeDuration(),
-                    SizedBox(height: 10),
+                    SizedBox(height: heightSizeBoxOut),
                     FloatingActionButton.extended(
                       onPressed: () {
                         if (isTitle) {
@@ -462,7 +499,10 @@ class _AlarmPageState extends State<AlarmPage> {
           },
         );
       },
-      child: widgetTextTitle(title),
+      child: Container(
+        width: widthWidgetTextButton,
+        child: widgetTextTitle(title, fontSize: fontSizeOut),
+      ),
     );
   }
 
@@ -496,11 +536,16 @@ class _AlarmPageState extends State<AlarmPage> {
 }
 
 void showNotification(int id) async {
+  // var timeNow = DateTime.now();
+  // Fluttertoast.showToast(
+  //     msg: "Run at: $timeNow", toastLength: Toast.LENGTH_LONG);
+  // print("Run at: $timeNow");
+
   AlarmHelper _alarmHelper = AlarmHelper();
   var alarmInfo = await _alarmHelper.getOneAlarm(id);
   if (alarmInfo.status == 1) {
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-      'quyvsquy',
+      'com.quyvsquy.repeat_notifications',
       'RepeatApp',
       'Repeat the notification after a period of time',
       importance: Importance.max,
