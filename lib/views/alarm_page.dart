@@ -55,7 +55,8 @@ class _AlarmPageState extends State<AlarmPage> {
   Widget build(BuildContext context) {
     double widthSceen = MediaQuery.of(context).size.width; //411.42857142857144
     double widthSizeBox = widthSceen / 41.142857142857144; //10
-    double widthSizeBox2 = widthSceen / 2.95991778;
+    double widthSizeBox2 = widthSceen / 2.95991778; //139
+    double widthNextAlarm = widthSceen / 8.228571429; //50
 
     double heightSceen = MediaQuery.of(context).size.height; //830.8571428571429
     double heightSizeBox = heightSceen / 83.08571428571429; //10
@@ -198,21 +199,26 @@ class _AlarmPageState extends State<AlarmPage> {
                                       children: <Widget>[
                                         widgetTextButton(alarmTime, alarm.id),
                                         GestureDetector(
-                                          onLongPress: () {
-                                            setState(() {
-                                              loadAlarms();
-                                            });
-                                            _popupDialog =
-                                                _createPopupDialog(timeNext);
-                                            Overlay.of(context)!
-                                                .insert(_popupDialog!);
-                                          },
-                                          onLongPressEnd: (details) =>
-                                              _popupDialog?.remove(),
-                                          child: widgetTextTitle(
-                                              stringNextAlarm,
-                                              fontSize: fontSizeOut),
-                                        ),
+                                            onTap: () {
+                                              setState(() {
+                                                loadAlarms();
+                                              });
+                                            },
+                                            onLongPress: () {
+                                              setState(() {
+                                                loadAlarms();
+                                              });
+                                              _popupDialog =
+                                                  _createPopupDialog(timeNext);
+                                              Overlay.of(context)!
+                                                  .insert(_popupDialog!);
+                                            },
+                                            onLongPressEnd: (details) =>
+                                                _popupDialog?.remove(),
+                                            child: widgetNextAlarm(
+                                                stringNextAlarm,
+                                                alarm.id,
+                                                widthNextAlarm)),
                                         IconButton(
                                             icon: Icon(Icons.delete),
                                             color: Colors.white,
@@ -349,7 +355,8 @@ class _AlarmPageState extends State<AlarmPage> {
   Future<void> onSaveAlarm(
       {bool isRepeat = true,
       int idForUpdate = -1,
-      bool isForTitle = false}) async {
+      bool isForTitle = false,
+      bool isForNextAlarm = false}) async {
     int hour, minute;
     var title = controllerTitle.text;
     var hText = controllerHour.text;
@@ -397,12 +404,30 @@ class _AlarmPageState extends State<AlarmPage> {
         updateAlarm(idForUpdate, alarmInfo,
             isSetState: false, isUpdateTimeAdded: false);
         _alarmHelper.update(idForUpdate, alarmInfo);
-      } else if (isForTitle == false &&
+      } else if (isForNextAlarm == false &&
+          isForTitle == false &&
           (hText.isNotEmpty || mText.isNotEmpty)) {
         var alarmInfo = await _alarmHelper.getOneAlarm(idForUpdate);
         alarmInfo.minutesRepeat = minutesRepeat;
         updateAlarm(idForUpdate, alarmInfo, isSetState: false);
         _alarmHelper.update(idForUpdate, alarmInfo);
+      } else if (isForNextAlarm == true && isForTitle == false) {
+        if (hText.isNotEmpty && mText.isNotEmpty) {
+          var alarmInfo = await _alarmHelper.getOneAlarm(idForUpdate);
+          var now = DateTime.now();
+          var timeNext = DateTime(
+              now.year, now.month, now.day, int.parse(hText), int.parse(mText));
+          alarmInfo.timeAdded = now;
+          alarmInfo.minutesRepeat =
+              timeNext.difference(alarmInfo.timeAdded).inMinutes + 1;
+
+          updateAlarm(idForUpdate, alarmInfo, isSetState: false);
+          _alarmHelper.update(idForUpdate, alarmInfo);
+        } else {
+          Fluttertoast.showToast(
+              msg: "Hours and Minutes are not null",
+              toastLength: Toast.LENGTH_LONG);
+        }
       }
     }
     // print("=" * 50);
@@ -556,6 +581,47 @@ class _AlarmPageState extends State<AlarmPage> {
     );
   }
 
+  Widget widgetNextAlarm(String title, int idForUpdate, double widthTextTitle) {
+    return TextButton(
+      onPressed: () async {
+        await showDialog(
+          context: context,
+          builder: (BuildContext buildContext) {
+            return Dialog(
+              child: Container(
+                height: heightWidgetTextButton,
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    widgetTextTitle("Change Next alarm",
+                        isWhite: false, fontSize: fontSizeOut),
+                    SizedBox(height: heightSizeBoxOut),
+                    widgetTimeDuration(),
+                    SizedBox(height: heightSizeBoxOut),
+                    FloatingActionButton.extended(
+                      onPressed: () {
+                        onSaveAlarm(
+                            isRepeat: false,
+                            idForUpdate: idForUpdate,
+                            isForNextAlarm: true);
+                      },
+                      icon: Icon(Icons.alarm),
+                      label: Text('Save'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+      child: Container(
+        width: widthTextTitle,
+        child: widgetTextTitle(title, fontSize: fontSizeOut),
+      ),
+    );
+  }
+
   void _onReorder(int oldIndex, int newIndex) async {
     var lenCurrentAlarm = _currentAlarms!.length;
     if (oldIndex < lenCurrentAlarm) {
@@ -586,6 +652,7 @@ class _AlarmPageState extends State<AlarmPage> {
 
   OverlayEntry _createPopupDialog(DateTime timeNext) {
     var timeRemain = timeNext.difference(DateTime.now()).inMinutes;
+    var timeShow = durationToString(timeRemain);
     return OverlayEntry(
       builder: (context) => AnimatedDialog(
         child: Container(
@@ -606,7 +673,7 @@ class _AlarmPageState extends State<AlarmPage> {
                 SizedBox(
                   height: heightSizeBoxOut,
                 ),
-                widgetTextTitle(timeRemain.toString(),
+                widgetTextTitle(timeShow,
                     fontSize: fontSizeOut, isWhite: false),
               ],
             ),
