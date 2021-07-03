@@ -668,7 +668,7 @@ class _AlarmPageState extends State<AlarmPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                widgetTextTitle('Time remaining (minutes):',
+                widgetTextTitle('Time remaining:',
                     fontSize: fontSizeOut, isWhite: false),
                 SizedBox(
                   height: heightSizeBoxOut,
