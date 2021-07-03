@@ -7,6 +7,7 @@ final String tableAlarm = 'alarm';
 final String columnId = 'id';
 final String columnIdx = 'idx';
 final String columnTitle = 'title';
+final String columnTimeAdded = 'timeAdded';
 final String columnDateTime = 'minutesRepeat';
 final String columnStatus = 'status';
 final String columnColorIndex = 'gradientColorIndex';
@@ -34,6 +35,7 @@ class AlarmHelper {
           $columnId integer primary key not null, 
           $columnIdx integer, 
           $columnTitle text not null,
+          $columnTimeAdded text not null,
           $columnDateTime integer not null,
           $columnStatus integer,
           $columnColorIndex integer)

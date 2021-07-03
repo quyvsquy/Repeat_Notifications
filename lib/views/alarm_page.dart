@@ -30,30 +30,32 @@ class _AlarmPageState extends State<AlarmPage> {
   double fontSizeOut = 0;
   double heightWidgetTextButton = 0;
   double widthWidgetTextButton = 0;
+  double sizePopupStyle = 0;
+  double borderRadiusSizeOut = 0;
+  OverlayEntry? _popupDialog;
 
   @override
   void initState() {
     _alarmHelper.initializeDatabase().then((value) async {
       print('------database intialized');
-      var temp = await _alarmHelper.getAlarms();
-      _alarms = temp.item1;
-      generateId = temp.item2;
-      if (mounted) setState(() {});
+      loadAlarms();
     });
 
     super.initState();
   }
 
-  // void loadAlarms() {
-  //   minutesRepeat = 0;
-  //   _alarms = _alarmHelper.getAlarms();
-  //   if (mounted) setState(() {});
-  // }
+  Future<void> loadAlarms() async {
+    var temp = await _alarmHelper.getAlarms();
+    _alarms = temp.item1;
+    generateId = temp.item2;
+    if (mounted) setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
     double widthSceen = MediaQuery.of(context).size.width; //411.42857142857144
     double widthSizeBox = widthSceen / 41.142857142857144; //10
+    double widthSizeBox2 = widthSceen / 2.95991778;
 
     double heightSceen = MediaQuery.of(context).size.height; //830.8571428571429
     double heightSizeBox = heightSceen / 83.08571428571429; //10
@@ -65,7 +67,9 @@ class _AlarmPageState extends State<AlarmPage> {
     heightSizeBoxOut = heightSizeBox;
     fontSizeOut = borderRadiusSize;
     heightWidgetTextButton = heightSceen / 4.372932331;
-    widthWidgetTextButton = widthSceen / 2.057142857;
+    widthWidgetTextButton = widthSceen / 2.285714286; // 180
+    sizePopupStyle = widthSceen;
+    borderRadiusSizeOut = borderRadiusSize;
 
     return WillPopScope(
         child: Container(
@@ -97,6 +101,11 @@ class _AlarmPageState extends State<AlarmPage> {
                               var gradientColor = GradientTemplate
                                   .gradientTemplate[alarm.gradientColorIndex]
                                   .colors;
+                              var timeNext = alarm.timeAdded
+                                  .add(Duration(minutes: alarm.minutesRepeat));
+
+                              var stringNextAlarm =
+                                  '${timeNext.hour.toString().padLeft(2, '0')}:${timeNext.minute.toString().padLeft(2, '0')}';
                               return Container(
                                 key: Key('${alarm.id}'),
                                 margin:
@@ -143,6 +152,11 @@ class _AlarmPageState extends State<AlarmPage> {
                                                 isTitle: true),
                                           ],
                                         ),
+                                        Icon(
+                                          Icons.alarm,
+                                          color: Colors.white,
+                                          size: borderRadiusSize,
+                                        ),
                                         Switch(
                                           onChanged: (bool value) {
                                             setState(() {
@@ -157,17 +171,48 @@ class _AlarmPageState extends State<AlarmPage> {
                                         ),
                                       ],
                                     ),
-                                    Text(
-                                      'Repeat after (Hours:Minutes)',
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontFamily: 'avenir'),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: <Widget>[
+                                        Text(
+                                          'Repeat after',
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontFamily: 'avenir'),
+                                        ),
+                                        SizedBox(
+                                          width: widthSizeBox2,
+                                        ),
+                                        Text(
+                                          'Next alarm',
+                                          style: TextStyle(
+                                              color: Colors.white,
+                                              fontFamily: 'avenir'),
+                                        ),
+                                      ],
                                     ),
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: <Widget>[
                                         widgetTextButton(alarmTime, alarm.id),
+                                        GestureDetector(
+                                          onLongPress: () {
+                                            setState(() {
+                                              loadAlarms();
+                                            });
+                                            _popupDialog =
+                                                _createPopupDialog(timeNext);
+                                            Overlay.of(context)!
+                                                .insert(_popupDialog!);
+                                          },
+                                          onLongPressEnd: (details) =>
+                                              _popupDialog?.remove(),
+                                          child: widgetTextTitle(
+                                              stringNextAlarm,
+                                              fontSize: fontSizeOut),
+                                        ),
                                         IconButton(
                                             icon: Icon(Icons.delete),
                                             color: Colors.white,
@@ -330,6 +375,7 @@ class _AlarmPageState extends State<AlarmPage> {
         id: generateId,
         idx: generateId,
         title: (title != '') ? title : "Noti",
+        timeAdded: DateTime.now(),
         minutesRepeat: minutesRepeat,
         status: 1,
         gradientColorIndex: _currentAlarms!.length % 5,
@@ -348,7 +394,8 @@ class _AlarmPageState extends State<AlarmPage> {
       if (isForTitle && title.isNotEmpty) {
         var alarmInfo = await _alarmHelper.getOneAlarm(idForUpdate);
         alarmInfo.title = title;
-        updateAlarm(idForUpdate, alarmInfo, isSetState: false);
+        updateAlarm(idForUpdate, alarmInfo,
+            isSetState: false, isUpdateTimeAdded: false);
         _alarmHelper.update(idForUpdate, alarmInfo);
       } else if (isForTitle == false &&
           (hText.isNotEmpty || mText.isNotEmpty)) {
@@ -380,8 +427,11 @@ class _AlarmPageState extends State<AlarmPage> {
   }
 
   Future<void> updateAlarm(int id, AlarmInfo alarmInfo,
-      {bool isSetState = true}) async {
+      {bool isSetState = true, bool isUpdateTimeAdded = true}) async {
     var idx = _currentAlarms!.indexWhere((element) => element.id == id);
+    if (isUpdateTimeAdded) {
+      alarmInfo.timeAdded = DateTime.now(); // Update time added
+    }
     _currentAlarms![idx] = alarmInfo;
     if (isSetState) {
       setState(() {
@@ -533,6 +583,38 @@ class _AlarmPageState extends State<AlarmPage> {
     }
     return Future.value(true);
   }
+
+  OverlayEntry _createPopupDialog(DateTime timeNext) {
+    var timeRemain = timeNext.difference(DateTime.now()).inMinutes;
+    return OverlayEntry(
+      builder: (context) => AnimatedDialog(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius:
+                BorderRadius.all(Radius.circular(borderRadiusSizeOut)),
+          ),
+          padding: EdgeInsets.symmetric(horizontal: 16.0),
+          width: sizePopupStyle,
+          height: sizePopupStyle,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                widgetTextTitle('Time remaining (minutes):',
+                    fontSize: fontSizeOut, isWhite: false),
+                SizedBox(
+                  height: heightSizeBoxOut,
+                ),
+                widgetTextTitle(timeRemain.toString(),
+                    fontSize: fontSizeOut, isWhite: false),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 void showNotification(int id) async {
@@ -543,6 +625,8 @@ void showNotification(int id) async {
 
   AlarmHelper _alarmHelper = AlarmHelper();
   var alarmInfo = await _alarmHelper.getOneAlarm(id);
+  alarmInfo.timeAdded = DateTime.now();
+  _alarmHelper.update(id, alarmInfo);
   if (alarmInfo.status == 1) {
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
       'com.quyvsquy.repeat_notifications',
@@ -573,4 +657,58 @@ String durationToString(int minutes) {
   var d = Duration(minutes: minutes);
   List<String> parts = d.toString().split(':');
   return '${parts[0].padLeft(2, '0')}:${parts[1].padLeft(2, '0')}';
+}
+
+// This a widget to implement the image scale animation, and background grey out effect.
+class AnimatedDialog extends StatefulWidget {
+  const AnimatedDialog({Key? key, this.child}) : super(key: key);
+
+  final Widget? child;
+
+  @override
+  State<StatefulWidget> createState() => AnimatedDialogState();
+}
+
+class AnimatedDialogState extends State<AnimatedDialog>
+    with SingleTickerProviderStateMixin {
+  AnimationController? controller;
+  Animation<double>? opacityAnimation;
+  Animation<double>? scaleAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    controller = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 400));
+    scaleAnimation =
+        CurvedAnimation(parent: controller!, curve: Curves.easeOutExpo);
+    opacityAnimation = Tween<double>(begin: 0.0, end: 0.6).animate(
+        CurvedAnimation(parent: controller!, curve: Curves.easeOutExpo));
+
+    controller!.addListener(() => setState(() {}));
+    controller!.forward();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.black.withOpacity(opacityAnimation!.value),
+      child: Center(
+        child: FadeTransition(
+          opacity: scaleAnimation!,
+          child: ScaleTransition(
+            scale: scaleAnimation!,
+            child: widget.child,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  dispose() {
+    controller!.dispose(); // you need this
+    super.dispose();
+  }
 }

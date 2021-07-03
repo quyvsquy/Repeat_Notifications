@@ -5,6 +5,7 @@ Repeat the notification after a period of time\
 - Unlimitedly create reminders.
 - Can change the title and duration after creating by clicking on them.
 - Can reorder just by dragging things where you want them to go. 
+- Press holds the time under the "Next alarm" to display the time to the next alarm .
 
 ## Supports
 - Android (tested in version [11,10,7,5.1]).
