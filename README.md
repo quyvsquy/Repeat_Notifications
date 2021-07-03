@@ -1,5 +1,5 @@
 # Repeat notifications
-Repeat the notification after a period of time\
+Create and repeat notifications after a period of time.\
 ![Phone Screen](assets/phone_screen.png)
 ## Features
 - Unlimitedly create reminders.
