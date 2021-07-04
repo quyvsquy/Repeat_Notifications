@@ -4,7 +4,8 @@ import 'package:repeat_notifications/models/alarm_info.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+// import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'package:android_alarm_manager/android_alarm_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 import '../main.dart';
@@ -393,8 +394,9 @@ class _AlarmPageState extends State<AlarmPage> {
         Duration(minutes: (minutesRepeat != 0) ? minutesRepeat : 1),
         id,
         showNotification,
-        exact: true,
+        // exact: true,
         wakeup: true,
+        rescheduleOnReboot: true,
       ).then((value) => print(
           "StartRepeat: ${value.toString()};time: ${alarmInfo.minutesRepeat.toString()}"));
     } else {
@@ -464,17 +466,19 @@ class _AlarmPageState extends State<AlarmPage> {
       });
     }
     _alarmHelper.update(id, alarmInfo);
-    await AndroidAlarmManager.cancel(id)
-        .then((value) => print("CancelRepeat: ${value.toString()}"));
-    if (alarmInfo.status == 1) {
+    if (alarmInfo.status == 0) {
+      await AndroidAlarmManager.cancel(id)
+          .then((value) => print("CancelRepeat: ${value.toString()}"));
+    } else {
       await AndroidAlarmManager.periodic(
         Duration(
             minutes:
                 (alarmInfo.minutesRepeat != 0) ? alarmInfo.minutesRepeat : 1),
         id,
         showNotification,
-        exact: true,
+        // exact: true,
         wakeup: true,
+        rescheduleOnReboot: true,
       ).then((value) => print(
           "StartRepeat: ${value.toString()};time: ${alarmInfo.minutesRepeat.toString()}"));
     }

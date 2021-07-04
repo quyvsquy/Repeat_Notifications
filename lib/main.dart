@@ -3,7 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:repeat_notifications/views/alarm_page.dart';
 import 'package:repeat_notifications/constants/theme_data.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+// import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+import 'package:android_alarm_manager/android_alarm_manager.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();

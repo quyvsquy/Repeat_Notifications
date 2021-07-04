@@ -9,7 +9,6 @@ Create and repeat notifications after a period of time.\
 
 ## Supports
 - Android (tested in version [11,10,7,5.1]).
-- IOS (flutter support but not tested).
 
 ## References
 - Thanks to **CodeX** to create a beautiful interface. [link](https://www.youtube.com/watch?v=tKtYfuuVHlA&list=PL3wGb9_yWsvKfjFgXntI_uxUV7R0L0Act&index=4)
