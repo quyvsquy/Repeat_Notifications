@@ -394,7 +394,7 @@ class _AlarmPageState extends State<AlarmPage> {
         Duration(minutes: (minutesRepeat != 0) ? minutesRepeat : 1),
         id,
         showNotification,
-        // exact: true,
+        exact: true,
         wakeup: true,
         rescheduleOnReboot: true,
       ).then((value) => print(
@@ -476,7 +476,7 @@ class _AlarmPageState extends State<AlarmPage> {
                 (alarmInfo.minutesRepeat != 0) ? alarmInfo.minutesRepeat : 1),
         id,
         showNotification,
-        // exact: true,
+        exact: true,
         wakeup: true,
         rescheduleOnReboot: true,
       ).then((value) => print(
