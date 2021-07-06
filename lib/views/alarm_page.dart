@@ -16,7 +16,7 @@ class AlarmPage extends StatefulWidget {
   _AlarmPageState createState() => _AlarmPageState();
 }
 
-class _AlarmPageState extends State<AlarmPage> {
+class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
   DateTime? currentBackPressTime;
   AlarmHelper _alarmHelper = AlarmHelper();
   Future<List<AlarmInfo>>? _alarms;
@@ -37,12 +37,28 @@ class _AlarmPageState extends State<AlarmPage> {
 
   @override
   void initState() {
+    super.initState();
+    WidgetsBinding.instance!.addObserver(this);
     _alarmHelper.initializeDatabase().then((value) async {
       print('------database intialized');
       loadAlarms();
     });
+  }
 
-    super.initState();
+  @override
+  void dispose() {
+    WidgetsBinding.instance!.removeObserver(this);
+
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) return;
+    loadAlarms();
   }
 
   Future<void> loadAlarms() async {
@@ -163,7 +179,8 @@ class _AlarmPageState extends State<AlarmPage> {
                                           onChanged: (bool value) {
                                             setState(() {
                                               alarm.status = (value) ? 1 : 0;
-                                              updateAlarm(alarm.id, alarm);
+                                              updateAlarm(alarm.id, alarm,
+                                                  isForSwitch: true);
                                             });
                                           },
                                           value: (alarm.status == 1)
@@ -224,7 +241,8 @@ class _AlarmPageState extends State<AlarmPage> {
                                             icon: Icon(Icons.delete),
                                             color: Colors.white,
                                             onPressed: () {
-                                              deleteAlarm(alarm.id);
+                                              deleteAlarm(
+                                                  alarm.id, alarm.status);
                                             }),
                                       ],
                                     ),
@@ -397,14 +415,19 @@ class _AlarmPageState extends State<AlarmPage> {
         exact: true,
         wakeup: true,
         rescheduleOnReboot: true,
-      ).then((value) => print(
-          "StartRepeat: ${value.toString()};time: ${alarmInfo.minutesRepeat.toString()}"));
+      ).then((value) =>
+          // Fluttertoast.showToast(
+          //     msg:
+          //         "Id: $id; StartRepeat: ${value.toString()}; time: ${alarmInfo.minutesRepeat.toString()}"));
+          print(
+              "Id: $id; StartRepeat: ${value.toString()}; time: ${alarmInfo.minutesRepeat.toString()}"));
     } else {
       if (isForTitle && title.isNotEmpty) {
         var alarmInfo = await _alarmHelper.getOneAlarm(idForUpdate);
         alarmInfo.title = title;
-        updateAlarm(idForUpdate, alarmInfo,
-            isSetState: false, isUpdateTimeAdded: false);
+        var idx =
+            _currentAlarms!.indexWhere((element) => element.id == idForUpdate);
+        _currentAlarms![idx] = alarmInfo;
         _alarmHelper.update(idForUpdate, alarmInfo);
       } else if (isForNextAlarm == false &&
           isForTitle == false &&
@@ -412,7 +435,6 @@ class _AlarmPageState extends State<AlarmPage> {
         var alarmInfo = await _alarmHelper.getOneAlarm(idForUpdate);
         alarmInfo.minutesRepeat = minutesRepeat;
         updateAlarm(idForUpdate, alarmInfo, isSetState: false);
-        _alarmHelper.update(idForUpdate, alarmInfo);
       } else if (isForNextAlarm == true && isForTitle == false) {
         if (hText.isNotEmpty && mText.isNotEmpty) {
           var alarmInfo = await _alarmHelper.getOneAlarm(idForUpdate);
@@ -422,9 +444,7 @@ class _AlarmPageState extends State<AlarmPage> {
           alarmInfo.timeAdded = now;
           alarmInfo.minutesRepeat =
               timeNext.difference(alarmInfo.timeAdded).inMinutes + 1;
-
           updateAlarm(idForUpdate, alarmInfo, isSetState: false);
-          _alarmHelper.update(idForUpdate, alarmInfo);
         } else {
           Fluttertoast.showToast(
               msg: "Hours and Minutes are not null",
@@ -443,18 +463,24 @@ class _AlarmPageState extends State<AlarmPage> {
     });
   }
 
-  Future<void> deleteAlarm(int id) async {
+  Future<void> deleteAlarm(int id, int status) async {
     _currentAlarms!.removeWhere((element) => element.id == id);
     setState(() {
       _alarms = Future.value(_currentAlarms);
     });
     _alarmHelper.delete(id);
-    await AndroidAlarmManager.cancel(id)
-        .then((value) => print("CancelRepeat: ${value.toString()}"));
+    if (status == 1) {
+      await AndroidAlarmManager.cancel(id).then((value) =>
+          // Fluttertoast.showToast(
+          //     msg: "Id: $id; CancelRepeat: ${value.toString()}"));
+          print("Id: $id; CancelRepeat: ${value.toString()}"));
+    }
   }
 
   Future<void> updateAlarm(int id, AlarmInfo alarmInfo,
-      {bool isSetState = true, bool isUpdateTimeAdded = true}) async {
+      {bool isForSwitch = false,
+      bool isSetState = true,
+      bool isUpdateTimeAdded = true}) async {
     var idx = _currentAlarms!.indexWhere((element) => element.id == id);
     if (isUpdateTimeAdded) {
       alarmInfo.timeAdded = DateTime.now(); // Update time added
@@ -466,10 +492,12 @@ class _AlarmPageState extends State<AlarmPage> {
       });
     }
     _alarmHelper.update(id, alarmInfo);
-    if (alarmInfo.status == 0) {
-      await AndroidAlarmManager.cancel(id)
-          .then((value) => print("CancelRepeat: ${value.toString()}"));
-    } else {
+    if (isForSwitch && alarmInfo.status == 0) {
+      await AndroidAlarmManager.cancel(id).then((value) =>
+          // Fluttertoast.showToast(
+          //     msg: "Id: $id; CancelRepeat: ${value.toString()}"));
+          print("Id: $id; CancelRepeat: ${value.toString()}"));
+    } else if (alarmInfo.status == 1) {
       await AndroidAlarmManager.periodic(
         Duration(
             minutes:
@@ -479,8 +507,12 @@ class _AlarmPageState extends State<AlarmPage> {
         exact: true,
         wakeup: true,
         rescheduleOnReboot: true,
-      ).then((value) => print(
-          "StartRepeat: ${value.toString()};time: ${alarmInfo.minutesRepeat.toString()}"));
+      ).then((value) =>
+          // ).then((value) => Fluttertoast.showToast(
+          //     msg:
+          //         "Id: $id; StartRepeat: ${value.toString()}   ; time: ${alarmInfo.minutesRepeat.toString()}"));
+          print(
+              "Id: $id; StartRepeat: ${value.toString()}   ; time: ${alarmInfo.minutesRepeat.toString()}"));
     }
   }
 
