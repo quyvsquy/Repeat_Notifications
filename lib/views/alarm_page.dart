@@ -59,10 +59,10 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
     if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.detached) return;
 
-    if (state == AppLifecycleState.paused) {
-      _alarmHelper
-          .onReorder(_currentAlarms!); // update index database if app paused
-    }
+    // if (state == AppLifecycleState.paused) {
+    //   _alarmHelper
+    //       .onReorder(_currentAlarms!); // update index database if app paused
+    // }
     if (state == AppLifecycleState.resumed) {
       loadAlarms();
     }
@@ -677,6 +677,7 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
         _currentAlarms!.insert(newIndex, item);
         _alarms = Future.value(_currentAlarms);
       });
+      _alarmHelper.onReorder(_currentAlarms!);
     }
   }
 
