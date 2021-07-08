@@ -33,6 +33,8 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
   double widthWidgetTextButton = 0;
   double sizePopupStyle = 0;
   double borderRadiusSizeOut = 0;
+  double allEdgeInsetsOut = 0;
+
   OverlayEntry? _popupDialog;
 
   @override
@@ -77,25 +79,25 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    double widthSceen = MediaQuery.of(context).size.width; //411.42857142857144
-    double widthSizeBox = widthSceen / 41.142857142857144; //10
-    double widthSizeBox2 = widthSceen / 2.95991778; //139
-    double widthNextAlarm = widthSceen / 8.228571429; //50
+    double widthSceen = MediaQuery.of(context).size.width; //392.72727272727275
+    double widthNextAlarm = widthSceen / 7.409948542; //53
 
-    double heightSceen = MediaQuery.of(context).size.height; //830.8571428571429
-    double heightSizeBox = heightSceen / 83.08571428571429; //10
+    double heightSceen = MediaQuery.of(context).size.height; //759.2727272727273
+    double heightSizeBox = heightSceen / 75.92727272727273; //10
 
     double paddingContainer = widthSceen / 12.85714286; //32
     double borderRadiusSize = widthSceen / 17.14285714; //24
 
-    widthSizeBoxOut = widthSizeBox;
+    widthSizeBoxOut = widthSceen / 39.27272727; //10
     heightSizeBoxOut = heightSizeBox;
-    fontSizeOut = borderRadiusSize;
-    heightWidgetTextButton = heightSceen / 4.372932331;
-    widthWidgetTextButton = widthSceen / 2.285714286; // 180
+    fontSizeOut = widthSceen / 19.63636364; // 20
+    heightWidgetTextButton = heightSceen / 3.796363636; //200
+    widthWidgetTextButton = widthSceen / 2.454545455; // 160
     sizePopupStyle = widthSceen;
     borderRadiusSizeOut = borderRadiusSize;
-
+    allEdgeInsetsOut = heightSceen / 41.54285714; // 20
+    // print("widthSceen: $widthSceen");
+    // print("heightSceen: $heightSceen");
     return WillPopScope(
         child: Container(
           padding: EdgeInsets.symmetric(
@@ -138,6 +140,8 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
                                 padding: EdgeInsets.symmetric(
                                     horizontal: paddingContainer / 2,
                                     vertical: paddingContainer / 4),
+                                // horizontal: 10,
+                                // vertical: 8),
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: gradientColor,
@@ -171,7 +175,6 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
                                               color: Colors.white,
                                               size: borderRadiusSize,
                                             ),
-                                            SizedBox(width: widthSizeBox),
                                             widgetTextButton(
                                                 alarm.title, alarm.id,
                                                 isTitle: true),
@@ -194,63 +197,81 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
                                               ? true
                                               : false,
                                           activeColor: Colors.white,
-                                        ),
-                                      ],
-                                    ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      children: <Widget>[
-                                        Text(
-                                          'Repeat after',
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontFamily: 'avenir'),
-                                        ),
-                                        SizedBox(
-                                          width: widthSizeBox2,
-                                        ),
-                                        Text(
-                                          'Next alarm',
-                                          style: TextStyle(
-                                              color: Colors.white,
-                                              fontFamily: 'avenir'),
-                                        ),
+                                        )
                                       ],
                                     ),
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: <Widget>[
-                                        widgetTextButton(alarmTime, alarm.id),
-                                        GestureDetector(
-                                            onTap: () {
-                                              setState(() {
-                                                loadAlarms();
-                                              });
-                                            },
-                                            onLongPress: () {
-                                              setState(() {
-                                                loadAlarms();
-                                              });
-                                              _popupDialog =
-                                                  _createPopupDialog(timeNext);
-                                              Overlay.of(context)!
-                                                  .insert(_popupDialog!);
-                                            },
-                                            onLongPressEnd: (details) =>
-                                                _popupDialog?.remove(),
-                                            child: widgetNextAlarm(
-                                                stringNextAlarm,
-                                                alarm.id,
-                                                widthNextAlarm)),
-                                        IconButton(
-                                            icon: Icon(Icons.delete),
-                                            color: Colors.white,
-                                            onPressed: () {
-                                              deleteAlarm(
-                                                  alarm.id, alarm.status);
-                                            }),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Repeat after',
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontFamily: 'avenir'),
+                                            ),
+                                            widgetTextButton(
+                                                alarmTime, alarm.id),
+                                          ],
+                                        ),
+                                        Row(
+                                          children: [
+                                            Column(
+                                              children: [
+                                                Text(
+                                                  'Next alarm',
+                                                  style: TextStyle(
+                                                      color: Colors.white,
+                                                      fontFamily: 'avenir'),
+                                                ),
+                                                GestureDetector(
+                                                    onTap: () {
+                                                      setState(() {
+                                                        loadAlarms();
+                                                      });
+                                                    },
+                                                    onLongPress: () {
+                                                      setState(() {
+                                                        loadAlarms();
+                                                      });
+                                                      _popupDialog =
+                                                          _createPopupDialog(
+                                                              timeNext);
+                                                      Overlay.of(context)!
+                                                          .insert(
+                                                              _popupDialog!);
+                                                    },
+                                                    onLongPressEnd: (details) =>
+                                                        _popupDialog?.remove(),
+                                                    child: widgetNextAlarm(
+                                                        stringNextAlarm,
+                                                        alarm.id,
+                                                        widthNextAlarm)),
+                                              ],
+                                            ),
+                                            Column(
+                                              children: [
+                                                Text(
+                                                  ':)',
+                                                  style: TextStyle(
+                                                      color: Colors.transparent,
+                                                      fontFamily: 'avenir'),
+                                                ),
+                                                IconButton(
+                                                    icon: Icon(Icons.delete),
+                                                    color: Colors.white,
+                                                    onPressed: () {
+                                                      deleteAlarm(alarm.id,
+                                                          alarm.status);
+                                                    }),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
                                       ],
                                     ),
                                   ],
@@ -573,9 +594,12 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
           context: context,
           builder: (BuildContext buildContext) {
             return Dialog(
+              shape: RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.all(Radius.circular(borderRadiusSizeOut))),
               child: Container(
                 height: heightWidgetTextButton,
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(allEdgeInsetsOut),
                 child: Column(
                   children: [
                     widgetTextTitle(
@@ -631,9 +655,12 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
           context: context,
           builder: (BuildContext buildContext) {
             return Dialog(
+              shape: RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.all(Radius.circular(borderRadiusSizeOut))),
               child: Container(
                 height: heightWidgetTextButton,
-                padding: const EdgeInsets.all(20),
+                padding: EdgeInsets.all(allEdgeInsetsOut),
                 child: Column(
                   children: [
                     widgetTextTitle("Change Next alarm",
