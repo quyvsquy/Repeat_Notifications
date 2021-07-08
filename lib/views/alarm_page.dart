@@ -80,7 +80,7 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     double widthSceen = MediaQuery.of(context).size.width; //392.72727272727275
-    double widthNextAlarm = widthSceen / 7.409948542; //53
+    double widthNextAlarm = (1 / 6) * widthSceen;
 
     double heightSceen = MediaQuery.of(context).size.height; //759.2727272727273
     double heightSizeBox = heightSceen / 75.92727272727273; //10
@@ -91,8 +91,8 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
     widthSizeBoxOut = widthSceen / 39.27272727; //10
     heightSizeBoxOut = heightSizeBox;
     fontSizeOut = widthSceen / 19.63636364; // 20
-    heightWidgetTextButton = heightSceen / 3.796363636; //200
-    widthWidgetTextButton = widthSceen / 2.454545455; // 160
+    heightWidgetTextButton = (2 / 3) * widthSceen; //
+    widthWidgetTextButton = (1 / 3) * widthSceen; //
     sizePopupStyle = widthSceen;
     borderRadiusSizeOut = borderRadiusSize;
     allEdgeInsetsOut = heightSceen / 41.54285714; // 20
@@ -218,16 +218,18 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
                                                 alarmTime, alarm.id),
                                           ],
                                         ),
-                                        Row(
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            Column(
+                                            Text(
+                                              'Next alarm',
+                                              style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontFamily: 'avenir'),
+                                            ),
+                                            Row(
                                               children: [
-                                                Text(
-                                                  'Next alarm',
-                                                  style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontFamily: 'avenir'),
-                                                ),
                                                 GestureDetector(
                                                     onTap: () {
                                                       setState(() {
@@ -251,16 +253,6 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
                                                         stringNextAlarm,
                                                         alarm.id,
                                                         widthNextAlarm)),
-                                              ],
-                                            ),
-                                            Column(
-                                              children: [
-                                                Text(
-                                                  ':)',
-                                                  style: TextStyle(
-                                                      color: Colors.transparent,
-                                                      fontFamily: 'avenir'),
-                                                ),
                                                 IconButton(
                                                     icon: Icon(Icons.delete),
                                                     color: Colors.white,
@@ -600,41 +592,43 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
               child: Container(
                 height: heightWidgetTextButton,
                 padding: EdgeInsets.all(allEdgeInsetsOut),
-                child: Column(
-                  children: [
-                    widgetTextTitle(
-                        (isTitle) ? "Change Title" : "Change Duration",
-                        isWhite: false,
-                        fontSize: fontSizeOut),
-                    SizedBox(height: heightSizeBoxOut),
-                    (isTitle)
-                        ? TextField(
-                            controller: controllerTitle,
-                            decoration: InputDecoration(
-                              border: OutlineInputBorder(),
-                              hintText: 'Title',
-                            ),
-                            autofocus: true,
-                          )
-                        : widgetTimeDuration(),
-                    SizedBox(height: heightSizeBoxOut),
-                    FloatingActionButton.extended(
-                      onPressed: () {
-                        if (isTitle) {
-                          onSaveAlarm(
-                            isRepeat: false,
-                            idForUpdate: idForUpdate,
-                            isForTitle: true,
-                          );
-                        } else {
-                          onSaveAlarm(
-                              isRepeat: false, idForUpdate: idForUpdate);
-                        }
-                      },
-                      icon: Icon(Icons.alarm),
-                      label: Text('Save'),
-                    ),
-                  ],
+                child: Center(
+                  child: Column(
+                    children: [
+                      widgetTextTitle(
+                          (isTitle) ? "Change Title" : "Change Duration",
+                          isWhite: false,
+                          fontSize: fontSizeOut),
+                      SizedBox(height: heightSizeBoxOut),
+                      (isTitle)
+                          ? TextField(
+                              controller: controllerTitle,
+                              decoration: InputDecoration(
+                                border: OutlineInputBorder(),
+                                hintText: 'Title',
+                              ),
+                              autofocus: true,
+                            )
+                          : widgetTimeDuration(),
+                      SizedBox(height: heightSizeBoxOut),
+                      FloatingActionButton.extended(
+                        onPressed: () {
+                          if (isTitle) {
+                            onSaveAlarm(
+                              isRepeat: false,
+                              idForUpdate: idForUpdate,
+                              isForTitle: true,
+                            );
+                          } else {
+                            onSaveAlarm(
+                                isRepeat: false, idForUpdate: idForUpdate);
+                          }
+                        },
+                        icon: Icon(Icons.alarm),
+                        label: Text('Save'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -659,28 +653,29 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
                   borderRadius:
                       BorderRadius.all(Radius.circular(borderRadiusSizeOut))),
               child: Container(
-                height: heightWidgetTextButton,
-                padding: EdgeInsets.all(allEdgeInsetsOut),
-                child: Column(
-                  children: [
-                    widgetTextTitle("Change Next alarm",
-                        isWhite: false, fontSize: fontSizeOut),
-                    SizedBox(height: heightSizeBoxOut),
-                    widgetTimeDuration(),
-                    SizedBox(height: heightSizeBoxOut),
-                    FloatingActionButton.extended(
-                      onPressed: () {
-                        onSaveAlarm(
-                            isRepeat: false,
-                            idForUpdate: idForUpdate,
-                            isForNextAlarm: true);
-                      },
-                      icon: Icon(Icons.alarm),
-                      label: Text('Save'),
+                  height: heightWidgetTextButton,
+                  padding: EdgeInsets.all(allEdgeInsetsOut),
+                  child: Center(
+                    child: Column(
+                      children: [
+                        widgetTextTitle("Change Next alarm",
+                            isWhite: false, fontSize: fontSizeOut),
+                        SizedBox(height: heightSizeBoxOut),
+                        widgetTimeDuration(),
+                        SizedBox(height: heightSizeBoxOut),
+                        FloatingActionButton.extended(
+                          onPressed: () {
+                            onSaveAlarm(
+                                isRepeat: false,
+                                idForUpdate: idForUpdate,
+                                isForNextAlarm: true);
+                          },
+                          icon: Icon(Icons.alarm),
+                          label: Text('Save'),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
+                  )),
             );
           },
         );
