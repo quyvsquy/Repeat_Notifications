@@ -80,10 +80,11 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     double widthSceen = MediaQuery.of(context).size.width; //392.72727272727275
-    double widthNextAlarm = (1 / 6) * widthSceen;
+    double widthNextAlarm = (9 / 50) * widthSceen;
 
     double heightSceen = MediaQuery.of(context).size.height; //759.2727272727273
     double heightSizeBox = heightSceen / 75.92727272727273; //10
+    double paddingFolowBy = heightSceen / 23.72727273; //32
 
     double paddingContainer = widthSceen / 12.85714286; //32
     double borderRadiusSize = widthSceen / 17.14285714; //24
@@ -308,8 +309,8 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
                                               builder:
                                                   (context, setModalState) {
                                                 return Container(
-                                                  padding:
-                                                      const EdgeInsets.all(32),
+                                                  padding: EdgeInsets.all(
+                                                      paddingFolowBy),
                                                   child: Column(
                                                     children: [
                                                       widgetTextTitle(
