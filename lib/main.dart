@@ -5,6 +5,7 @@ import 'package:repeat_notifications/constants/theme_data.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 // import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:android_alarm_manager/android_alarm_manager.dart';
+import 'package:device_apps/device_apps.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -25,6 +26,11 @@ void main() async {
       onSelectNotification: (String? payload) async {
     if (payload != null) {
       debugPrint('notification payload: ' + payload);
+      if (payload == 'momo') {
+        DeviceApps.openApp('com.mservice.momotransfer');
+      } else if (payload == 'shopee') {
+        DeviceApps.openApp('com.shopee.vn');
+      }
     }
   });
   await AndroidAlarmManager.initialize();

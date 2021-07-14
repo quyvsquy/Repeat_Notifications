@@ -7,6 +7,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 // import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:android_alarm_manager/android_alarm_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:device_apps/device_apps.dart';
 
 import '../main.dart';
 
@@ -134,140 +135,155 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
 
                               var stringNextAlarm =
                                   '${timeNext.hour.toString().padLeft(2, '0')}:${timeNext.minute.toString().padLeft(2, '0')}';
-                              return Container(
+                              return GestureDetector(
+                                onTap: () async {
+                                  if (titleToTypeOpenApp(alarm.title) ==
+                                      'momo') {
+                                    DeviceApps.openApp(
+                                        'com.mservice.momotransfer');
+                                  } else if (titleToTypeOpenApp(alarm.title) ==
+                                      'shopee') {
+                                    DeviceApps.openApp('com.shopee.vn');
+                                  }
+                                },
                                 key: Key('${alarm.id}'),
-                                margin:
-                                    EdgeInsets.only(bottom: paddingContainer),
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: paddingContainer / 2,
-                                    vertical: paddingContainer / 4),
-                                // horizontal: 10,
-                                // vertical: 8),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: gradientColor,
-                                    begin: Alignment.centerLeft,
-                                    end: Alignment.centerRight,
+                                child: Container(
+                                  margin:
+                                      EdgeInsets.only(bottom: paddingContainer),
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: paddingContainer / 2,
+                                      vertical: paddingContainer / 4),
+                                  // horizontal: 10,
+                                  // vertical: 8),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: gradientColor,
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color:
+                                            gradientColor.last.withOpacity(0.4),
+                                        blurRadius: paddingContainer / 4,
+                                        spreadRadius: paddingContainer / 16,
+                                        offset: Offset(paddingContainer / 8,
+                                            paddingContainer / 8),
+                                      ),
+                                    ],
+                                    borderRadius: BorderRadius.all(
+                                        Radius.circular(borderRadiusSize)),
                                   ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color:
-                                          gradientColor.last.withOpacity(0.4),
-                                      blurRadius: paddingContainer / 4,
-                                      spreadRadius: paddingContainer / 16,
-                                      offset: Offset(paddingContainer / 8,
-                                          paddingContainer / 8),
-                                    ),
-                                  ],
-                                  borderRadius: BorderRadius.all(
-                                      Radius.circular(borderRadiusSize)),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: <Widget>[
-                                        Row(
-                                          children: <Widget>[
-                                            Icon(
-                                              Icons.label,
-                                              color: Colors.white,
-                                              size: borderRadiusSize,
-                                            ),
-                                            widgetTextButton(
-                                                alarm.title, alarm.id,
-                                                isTitle: true),
-                                          ],
-                                        ),
-                                        Icon(
-                                          Icons.alarm,
-                                          color: Colors.white,
-                                          size: borderRadiusSize,
-                                        ),
-                                        Switch(
-                                          onChanged: (bool value) {
-                                            setState(() {
-                                              alarm.status = (value) ? 1 : 0;
-                                              updateAlarm(alarm.id, alarm,
-                                                  isForSwitch: true);
-                                            });
-                                          },
-                                          value: (alarm.status == 1)
-                                              ? true
-                                              : false,
-                                          activeColor: Colors.white,
-                                        )
-                                      ],
-                                    ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: <Widget>[
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Repeat after',
-                                              style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontFamily: 'avenir'),
-                                            ),
-                                            widgetTextButton(
-                                                alarmTime, alarm.id),
-                                          ],
-                                        ),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Next alarm',
-                                              style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontFamily: 'avenir'),
-                                            ),
-                                            Row(
-                                              children: [
-                                                GestureDetector(
-                                                    onTap: () {
-                                                      setState(() {
-                                                        loadAlarms();
-                                                      });
-                                                    },
-                                                    onLongPress: () {
-                                                      setState(() {
-                                                        loadAlarms();
-                                                      });
-                                                      _popupDialog =
-                                                          _createPopupDialog(
-                                                              timeNext);
-                                                      Overlay.of(context)!
-                                                          .insert(
-                                                              _popupDialog!);
-                                                    },
-                                                    onLongPressEnd: (details) =>
-                                                        _popupDialog?.remove(),
-                                                    child: widgetNextAlarm(
-                                                        stringNextAlarm,
-                                                        alarm.id,
-                                                        widthNextAlarm)),
-                                                IconButton(
-                                                    icon: Icon(Icons.delete),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: <Widget>[
+                                          Row(
+                                            children: <Widget>[
+                                              Icon(
+                                                Icons.label,
+                                                color: Colors.white,
+                                                size: borderRadiusSize,
+                                              ),
+                                              widgetTextButton(
+                                                  alarm.title, alarm.id,
+                                                  isTitle: true),
+                                            ],
+                                          ),
+                                          Icon(
+                                            Icons.alarm,
+                                            color: Colors.white,
+                                            size: borderRadiusSize,
+                                          ),
+                                          Switch(
+                                            onChanged: (bool value) {
+                                              setState(() {
+                                                alarm.status = (value) ? 1 : 0;
+                                                updateAlarm(alarm.id, alarm,
+                                                    isForSwitch: true);
+                                              });
+                                            },
+                                            value: (alarm.status == 1)
+                                                ? true
+                                                : false,
+                                            activeColor: Colors.white,
+                                          )
+                                        ],
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: <Widget>[
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Repeat after',
+                                                style: TextStyle(
                                                     color: Colors.white,
-                                                    onPressed: () {
-                                                      deleteAlarm(alarm.id,
-                                                          alarm.status);
-                                                    }),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ],
+                                                    fontFamily: 'avenir'),
+                                              ),
+                                              widgetTextButton(
+                                                  alarmTime, alarm.id),
+                                            ],
+                                          ),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Next alarm',
+                                                style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontFamily: 'avenir'),
+                                              ),
+                                              Row(
+                                                children: [
+                                                  GestureDetector(
+                                                      onTap: () {
+                                                        setState(() {
+                                                          loadAlarms();
+                                                        });
+                                                      },
+                                                      onLongPress: () {
+                                                        setState(() {
+                                                          loadAlarms();
+                                                        });
+                                                        _popupDialog =
+                                                            _createPopupDialog(
+                                                                timeNext);
+                                                        Overlay.of(context)!
+                                                            .insert(
+                                                                _popupDialog!);
+                                                      },
+                                                      onLongPressEnd:
+                                                          (details) =>
+                                                              _popupDialog
+                                                                  ?.remove(),
+                                                      child: widgetNextAlarm(
+                                                          stringNextAlarm,
+                                                          alarm.id,
+                                                          widthNextAlarm)),
+                                                  IconButton(
+                                                      icon: Icon(Icons.delete),
+                                                      color: Colors.white,
+                                                      onPressed: () {
+                                                        deleteAlarm(alarm.id,
+                                                            alarm.status);
+                                                      }),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               );
                             }).followedBy([
@@ -782,8 +798,22 @@ void showNotification(int id) async {
       'Alarm Fire',
       alarmInfo.title,
       platformChannelSpecifics,
+      payload: titleToTypeOpenApp(alarmInfo.title),
     );
   }
+}
+
+String titleToTypeOpenApp(String title) {
+  String res = '';
+  title = title.toLowerCase();
+  if (title.contains('heo') || title.contains('momo')) {
+    res = 'momo';
+  } else if (title.contains('tưới') ||
+      title.contains('lắc') ||
+      title.contains('shope')) {
+    res = 'shopee';
+  }
+  return res;
 }
 
 String durationToString(int minutes) {
