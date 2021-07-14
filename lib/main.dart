@@ -6,6 +6,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 // import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:android_alarm_manager/android_alarm_manager.dart';
 import 'package:device_apps/device_apps.dart';
+import 'package:repeat_notifications/alarm_helper.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
@@ -26,9 +27,32 @@ void main() async {
       onSelectNotification: (String? payload) async {
     if (payload != null) {
       debugPrint('notification payload: ' + payload);
-      if (payload == 'momo') {
+      var listSplit = payload.split(':');
+      String type = listSplit[0];
+      int id = int.parse(listSplit[1]);
+      AlarmHelper _alarmHelper = AlarmHelper();
+      var alarmInfo = await _alarmHelper.getOneAlarm(id);
+      alarmInfo.timeAdded = DateTime.now();
+      _alarmHelper.update(id, alarmInfo);
+      if (alarmInfo.status == 0) {
+        await AndroidAlarmManager.cancel(id).then(
+            (value) => print("Id: $id; CancelRepeat: ${value.toString()}"));
+      } else if (alarmInfo.status == 1) {
+        await AndroidAlarmManager.periodic(
+          Duration(
+              minutes:
+                  (alarmInfo.minutesRepeat != 0) ? alarmInfo.minutesRepeat : 1),
+          id,
+          showNotification,
+          exact: true,
+          wakeup: true,
+          rescheduleOnReboot: true,
+        ).then((value) => print(
+            "Id: $id; StartRepeat: ${value.toString()}   ; time: ${alarmInfo.minutesRepeat.toString()}"));
+      }
+      if (type == 'momo') {
         DeviceApps.openApp('com.mservice.momotransfer');
-      } else if (payload == 'shopee') {
+      } else if (type == 'shopee') {
         DeviceApps.openApp('com.shopee.vn');
       }
     }

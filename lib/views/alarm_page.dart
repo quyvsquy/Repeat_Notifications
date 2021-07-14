@@ -798,7 +798,7 @@ void showNotification(int id) async {
       'Alarm Fire',
       alarmInfo.title,
       platformChannelSpecifics,
-      payload: titleToTypeOpenApp(alarmInfo.title),
+      payload: "${titleToTypeOpenApp(alarmInfo.title)}:$id",
     );
   }
 }
