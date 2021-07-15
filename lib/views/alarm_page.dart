@@ -8,6 +8,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:android_alarm_manager/android_alarm_manager.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:device_apps/device_apps.dart';
+import 'package:repeat_notifications/views/my_icons.dart';
 
 import '../main.dart';
 
@@ -35,6 +36,7 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
   double sizePopupStyle = 0;
   double borderRadiusSizeOut = 0;
   double allEdgeInsetsOut = 0;
+  bool checkOrderedListView = false;
 
   OverlayEntry? _popupDialog;
 
@@ -62,11 +64,11 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
     if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.detached) return;
 
-    // if (state == AppLifecycleState.paused) {
-    //   _alarmHelper
-    //       .onReorder(_currentAlarms!); // update index database if app paused
-    // }
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.paused && checkOrderedListView) {
+      _alarmHelper
+          .onReorder(_currentAlarms!); // update index database if app paused
+      checkOrderedListView = false;
+    } else if (state == AppLifecycleState.resumed) {
       loadAlarms();
     }
   }
@@ -185,7 +187,7 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
                                           Row(
                                             children: <Widget>[
                                               Icon(
-                                                Icons.label,
+                                                chooseIcon(alarm.title),
                                                 color: Colors.white,
                                                 size: borderRadiusSize,
                                               ),
@@ -418,10 +420,10 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
     var hText = controllerHour.text;
     var mText = controllerMinute.text;
     if (hText != '' && mText != '') {
-      hour = int.parse(hText) * 60;
+      hour = int.parse(hText);
       minute = int.parse(mText);
     } else if (mText == '' && hText != '') {
-      hour = int.parse(hText) * 60;
+      hour = int.parse(hText);
       minute = 0;
     } else if (hText == '' && mText != '') {
       hour = 0;
@@ -430,15 +432,18 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
       hour = 0;
       minute = 0;
     }
-    minutesRepeat = hour + minute;
+    minutesRepeat = hour * 60 + minute;
 
     if (isRepeat) {
       generateId += 1;
+      var now = DateTime.now();
+      now = DateTime(now.year, now.month, now.day, now.hour,
+          now.minute); // set second, millisecond, microsecond = 0
       var alarmInfo = AlarmInfo(
         id: generateId,
         idx: generateId,
         title: (title != '') ? title : "Noti",
-        timeAdded: DateTime.now(),
+        timeAdded: now,
         minutesRepeat: minutesRepeat,
         status: 1,
         gradientColorIndex: _currentAlarms!.length % 5,
@@ -473,20 +478,18 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
         alarmInfo.minutesRepeat = minutesRepeat;
         updateAlarm(idForUpdate, alarmInfo, isSetState: false);
       } else if (isForNextAlarm == true && isForTitle == false) {
-        if (hText.isNotEmpty && mText.isNotEmpty) {
-          var alarmInfo = await _alarmHelper.getOneAlarm(idForUpdate);
-          var now = DateTime.now();
-          var timeNext = DateTime(
-              now.year, now.month, now.day, int.parse(hText), int.parse(mText));
-          alarmInfo.timeAdded = now;
-          alarmInfo.minutesRepeat =
-              timeNext.difference(alarmInfo.timeAdded).inMinutes + 1;
-          updateAlarm(idForUpdate, alarmInfo, isSetState: false);
-        } else {
-          Fluttertoast.showToast(
-              msg: "Hours and Minutes are not null",
-              toastLength: Toast.LENGTH_LONG);
+        var alarmInfo = await _alarmHelper.getOneAlarm(idForUpdate);
+        var now = DateTime.now();
+        now = DateTime(now.year, now.month, now.day, now.hour,
+            now.minute); // set second, millisecond, microsecond = 0
+        var timeNext = DateTime(now.year, now.month, now.day, hour, minute);
+        alarmInfo.timeAdded = now;
+        var temp = timeNext.difference(now).inMinutes;
+        if (temp < 0) {
+          temp += 1440;
         }
+        alarmInfo.minutesRepeat = temp;
+        updateAlarm(idForUpdate, alarmInfo, isSetState: false);
       }
     }
     // print("=" * 50);
@@ -599,6 +602,18 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
       {bool isTitle = false}) {
     return TextButton(
       onPressed: () async {
+        if (isTitle) {
+          controllerTitle.text = title;
+        } else {
+          // AlarmInfo alarmInfo = _currentAlarms!
+          //     .firstWhere((element) => element.id == idForUpdate);
+          // var temp = durationToString(alarmInfo.minutesRepeat).split(":");
+          var temp = title.split(":");
+          var tempHour = int.parse(temp[0]);
+          var tempMinute = int.parse(temp[1]);
+          controllerHour.text = tempHour != 0 ? tempHour.toString() : "";
+          controllerMinute.text = tempMinute != 0 ? tempMinute.toString() : "";
+        }
         await showDialog(
           context: context,
           builder: (BuildContext buildContext) {
@@ -662,6 +677,11 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
   Widget widgetNextAlarm(String title, int idForUpdate, double widthTextTitle) {
     return TextButton(
       onPressed: () async {
+        var temp = title.split(":");
+        var tempHour = int.parse(temp[0]);
+        var tempMinute = int.parse(temp[1]);
+        controllerHour.text = tempHour != 0 ? tempHour.toString() : "";
+        controllerMinute.text = tempMinute != 0 ? tempMinute.toString() : "";
         await showDialog(
           context: context,
           builder: (BuildContext buildContext) {
@@ -715,8 +735,9 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
         _currentAlarms!.removeAt(oldIndex);
         _currentAlarms!.insert(newIndex, item);
         _alarms = Future.value(_currentAlarms);
+        checkOrderedListView = true;
       });
-      _alarmHelper.onReorder(_currentAlarms!);
+      // _alarmHelper.onReorder(_currentAlarms!);
     }
   }
 
@@ -763,6 +784,19 @@ class _AlarmPageState extends State<AlarmPage> with WidgetsBindingObserver {
         ),
       ),
     );
+  }
+
+  IconData chooseIcon(String title) {
+    var type = titleToTypeOpenApp(title);
+    IconData res;
+    if (type == 'momo') {
+      res = MyIcon.momo;
+    } else if (type == 'shopee') {
+      res = MyIcon.shopee;
+    } else {
+      res = Icons.label;
+    }
+    return res;
   }
 }
 
