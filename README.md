@@ -1,5 +1,5 @@
 # Repeat notifications
-[Available on Google Play](https://play.google.com/store/apps/details?id=com.quyvsquy.repeat_notifications)\
+[Available on Google Play](https://play.google.com/store/apps/details?id=com.quyvsquy.repeat_notifications), current version: 1.2.4\
 Create and repeat notifications after a period of time.\
 ![Phone Screen](assets/phone_screen.png)
 ## Features
